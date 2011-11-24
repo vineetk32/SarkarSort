@@ -1,0 +1,7 @@
+Steps - 
+
+git config --global user.name "Vineet"
+git config --global user.email vineetk32@gmail.com
+
+git clone git@github.com:vineetk32/SarkarSort.git
+git pull
