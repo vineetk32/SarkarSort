@@ -1,2 +1,2 @@
 all:
-	gcc sarkarSort.c -o SarkarSort -g
+	gcc sarkarSort.c -o SarkarSort -g -lpthread
