@@ -6,7 +6,7 @@ int main()
 	FILE *finput;
 	long int offset = 0;
 	int currChar;
-	char fileNamePrefix[] = {'c','h','u','n','k','\0'};
+	char fileNamePrefix[] = {'f','i','l','e','o','f','f','s','e','t','s','\0'};
 	char tempFileName[32] = {'\0'};
 	int i;
 
