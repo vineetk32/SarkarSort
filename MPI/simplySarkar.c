@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #define NUM_RECORDS    10000000
 #define RECORD_LENGTH  100
@@ -61,8 +62,14 @@ int main(int argc, char **argv)
 		i++;
 	}
 	fclose(fin);
+
+	gettimeofday(&end_time,NULL);
+	printf("\nRead %d records in  %lf s\n",NUM_RECORDS,(end_time.tv_sec - start_time.tv_sec) +  (end_time.tv_usec - start_time.tv_usec)/1000000.0);
 	qsort(sortArray,NUM_RECORDS,sizeof(struct helperStruct),myCompare);
 
+
+	gettimeofday(&end_time,NULL);
+	printf("\nSorted %d records in  %lf s\n",NUM_RECORDS,(end_time.tv_sec - start_time.tv_sec) +  (end_time.tv_usec - start_time.tv_usec)/1000000.0);
 	fout = fopen(outputFileName,"w");
 	
 	for (i = 0; i < NUM_RECORDS; i++)
@@ -76,7 +83,7 @@ int main(int argc, char **argv)
 	}
 	free(tempBuff);
 	gettimeofday(&end_time,NULL);
-	printf("\nSorted %ld records in  %lf s\n",NUM_RECORDS,(end_time.tv_sec - start_time.tv_sec) +  (end_time.tv_usec - start_time.tv_usec)/1000000.0);
+	printf("\nTotal time - %lf s\n",(end_time.tv_sec - start_time.tv_sec) +  (end_time.tv_usec - start_time.tv_usec)/1000000.0);
 
 	return 0;
 }
