@@ -1,4 +1,4 @@
-CFLAGS= -Wall -O2
+CFLAGS= -Wall -ggdb
 LIBS= -lpthread
 
 BINDIR=bin/

@@ -1,36 +1,101 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define RECORD_LENGTH 100
-int main(int argc,char **argv)
-{
-	FILE *handles[256];
+#define FILE_SEEK_SIZE 100000
+#define BUCKET_SIZE 100000
+#define FILE_NAME 100
+
+typedef struct dataBucket {
+	char *dataStore;
+	int numRecords;
+} DataBucket;
+
+void init_buckets(DataBucket *bucket) {
+	bucket->dataStore = (char *) malloc(sizeof(char) * RECORD_LENGTH
+			* BUCKET_SIZE);
+	bucket->numRecords = 0;
+}
+
+int main(int argc, char **argv) {
+	FILE *handles[128][2];
 	FILE *finput;
 	int currChar;
-	//char fileNamePrefix[] = {'f','i','l','e','c','h','u','n','k','\0'};
-	char tempFileName[32] = {'\0'};
-	char tempBuff[100] = {'\0'};
-	int i;
+	int nextChar;
+	DataBucket buckets[128][2];
+	int j, k;
 
-	finput = fopen(argv[1],"rb");
-	for (i = 0; i < 255; i++)
-	{
-		handles[i] = NULL;
+	char tempFileName[FILE_NAME] = { '\0' };
+	char ipFileName[FILE_NAME] = { '\0' };
+	char *tempBuff;
+	int i;
+	int numRecords = FILE_SEEK_SIZE;
+
+	//int partition;
+
+	for (i = 32; i < 127; i++) {
+		for (j = 0; j < 2; j++)
+			init_buckets(&buckets[i][j]);
 	}
-	while (fread(tempBuff,100,1,finput) > 0 )
-	{
-		//printf("\nDEBUG: offset - %ld currChar - %d",offset,currChar);
-		currChar = tempBuff[0];
-		if (handles[currChar] == NULL)
-		{
-			sprintf(tempFileName,"%s.%d",argv[1],currChar);
-			handles[currChar] = fopen(tempFileName,"wb");
+	tempBuff = (char *) malloc(sizeof(char) * FILE_SEEK_SIZE * RECORD_LENGTH);
+
+	for (i = 32; i < 127; i++)
+		for (j = 0; j < 2; j++) {
+			sprintf(tempFileName, "%s_%d_%d", argv[2], i, j);
+			handles[i][j] = fopen(tempFileName, "wb");
 		}
-		fwrite(tempBuff,100,1,handles[currChar]);
+
+	j = 0;
+	//	for (partition = 0; partition < 100; partition++) {			//TODO;
+	sprintf(ipFileName, "%s", argv[1]);
+	finput = fopen(ipFileName, "rb");
+	do {
+		numRecords = fread(tempBuff, RECORD_LENGTH, FILE_SEEK_SIZE, finput);
+		//printf("%d\n",numRecords);
+		for (i = 0; i < numRecords; i++) {
+			currChar = tempBuff[i * RECORD_LENGTH];
+			nextChar = tempBuff[i * RECORD_LENGTH + 1];
+
+			strncpy(&buckets[currChar][nextChar<79?0:1].dataStore[RECORD_LENGTH
+					* buckets[currChar][nextChar<79?0:1].numRecords], &tempBuff[i
+					* RECORD_LENGTH], RECORD_LENGTH);
+			buckets[currChar][nextChar<79?0:1].numRecords++;
+		}
+		j++;
+		if (j > 90) {
+			printf("writing");
+			for (i = 32; i < 127; i++)
+				for (k = 0; k < 2; k++)
+					//printf("\n Bucket : %d Num of records %d", i,	buckets[i].numRecords);
+					fwrite(buckets[i][k].dataStore, RECORD_LENGTH
+							* buckets[i][k].numRecords, 1, handles[i][k]);
+			j = 0;
+
+			//reinit buffers
+			for (i = 32; i < 127; i++)
+				for (k = 0; k < 2; k++)
+					buckets[i][k].numRecords = 0;
+		}
+
+	} while (numRecords == FILE_SEEK_SIZE);
+
+	if (j <= 90) {
+		//printf("writing1");
+		for (i = 32; i < 127; i++)
+			for (k = 0; k < 2; k++)
+				//printf("\n Bucket : %d Num of records %d", i,	buckets[i].numRecords);
+				fwrite(buckets[i][k].dataStore, RECORD_LENGTH * buckets[i][k].numRecords, 1, handles[i][k]);
 	}
-	for (i = 0; i < 255; i++)
-	{
-		if (handles[i] != NULL)
-		{
-			fclose(handles[i]);
+	fclose(finput);
+	//TODO delete file in seperate posix thread
+
+	//	}
+
+	for (i = 32; i < 127; i++) {
+		for(j=0; j<2;j++)
+		if (handles[i][j] != NULL) {
+			fclose(handles[i][j]);
 		}
 	}
 	return 0;
